@@ -1,5 +1,5 @@
 const HttpError = require("../models/http-error");
-
+const AWS = require("aws-sdk");
 const DUMMY_POSTS = [
   {
     name: "julescohen",
@@ -12,9 +12,9 @@ const DUMMY_POSTS = [
     comments: [
       {
         author: "nicco12",
-        comment: "Amazing pic! :)"
-      }
-    ]
+        comment: "Amazing pic! :)",
+      },
+    ],
   },
   {
     name: "julescohen",
@@ -24,7 +24,7 @@ const DUMMY_POSTS = [
     likes: 42,
     text: "L'aventurier!!",
     hashtags: "#neige #montreal #dog #pinscher #bodeguero",
-    comments: []
+    comments: [],
   },
   {
     name: "julescohen",
@@ -34,12 +34,50 @@ const DUMMY_POSTS = [
     likes: 23,
     text: "Look at my puppy!!",
     hashtags: "#puppy #doglife",
-    comments: []
-  }
+    comments: [],
+  },
 ];
 
 const getPosts = (req, res, next) => {
   res.json(DUMMY_POSTS);
 };
 
+const createPost = (req, res, next) => {
+  // try {
+  DUMMY_POSTS.push({
+    name: req.body.name,
+    key: req.body.key,
+    image: req.body.imageLocation,
+  });
+
+  console.log("PUSHED");
+
+  // } catch (error) {
+  deleteImage(req);
+  // }
+
+  res.json(DUMMY_POSTS);
+  next();
+};
+
+const deleteImage = (req) => {
+  const s3 = new AWS.S3({
+    accessKeyId: process.env.AWS_ID,
+    secretAccessKey: process.env.AWS_SECRET,
+  });
+
+  var params = {
+    Bucket: process.env.AWS_BUCKET_NAME,
+    Key: "0aa146bb-e538-489a-bd05-cc5133fd4f9c.jpg",
+  };
+  s3.deleteObject(params, function (err, data) {
+    if (data) {
+      console.log("File deleted successfully");
+    } else {
+      console.log("Check if you have sufficient permissions : " + err);
+    }
+  });
+};
+
 exports.getPosts = getPosts;
+exports.createPost = createPost;
