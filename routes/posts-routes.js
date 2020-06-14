@@ -7,11 +7,16 @@ const router = express.Router();
 
 router.get("/", postsControllers.getPosts);
 
+router.post("/:pid/comments", postsControllers.createComment);
+router.patch("/:pid/likes", postsControllers.updateLikes);
+
 router.post(
   "/",
   fileUpload.single("image"),
   imagesControllers.uploadImage,
   postsControllers.createPost
 );
+
+router.delete("/:pid", postsControllers.deletePost);
 
 module.exports = router;

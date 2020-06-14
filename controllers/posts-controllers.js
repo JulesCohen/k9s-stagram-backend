@@ -1,83 +1,218 @@
 const HttpError = require("../models/http-error");
 const AWS = require("aws-sdk");
-const DUMMY_POSTS = [
-  {
-    name: "julescohen",
-    location: "Montreal, Canada",
-    image:
-      "https://scontent.fymq2-1.fna.fbcdn.net/v/t1.0-9/65536355_10157078253581675_2979088538840072192_o.jpg?_nc_cat=105&_nc_sid=05277f&_nc_ohc=V5Zpu_GKSdcAX94ONrj&_nc_ht=scontent.fymq2-1.fna&oh=86a516470af7d6c540e0e70e8797b3a2&oe=5F00D82A",
-    likes: 16,
-    text: "They're so cute!!",
-    hashtags: "#pinscher #doglife #chihuahua",
-    comments: [
-      {
-        author: "nicco12",
-        comment: "Amazing pic! :)",
-      },
-    ],
-  },
-  {
-    name: "julescohen",
-    location: "Montreal, Canada",
-    image:
-      "https://scontent.fymq2-1.fna.fbcdn.net/v/t1.0-9/53618325_10156823673116675_584088085940142080_o.jpg?_nc_cat=110&_nc_sid=05277f&_nc_ohc=7Q0xQcSzZWUAX-Iy2KC&_nc_ht=scontent.fymq2-1.fna&oh=2390b14f5d6f0907588d180d3a77a609&oe=5F00170F",
-    likes: 42,
-    text: "L'aventurier!!",
-    hashtags: "#neige #montreal #dog #pinscher #bodeguero",
-    comments: [],
-  },
-  {
-    name: "julescohen",
-    location: "Montreal, Canada",
-    image:
-      "https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg",
-    likes: 23,
-    text: "Look at my puppy!!",
-    hashtags: "#puppy #doglife",
-    comments: [],
-  },
-];
+const deleteImage = require("../middleware/file-delete");
+const Post = require("../models/post");
+const mongoose = require("mongoose");
+const User = require("../models/user");
+const Comment = require("../models/comment");
 
-const getPosts = (req, res, next) => {
-  res.json(DUMMY_POSTS);
+const getPosts = async (req, res, next) => {
+  let posts;
+  try {
+    posts = await Post.find()
+      .populate("comments")
+      .populate("author", "-password -email -posts");
+    // posts.comments.map((post) => post.comments.populate("author"));
+  } catch (err) {
+    const error = new HttpError(
+      "Fetching posts failed, please try again later.",
+      500
+    );
+    return next(error);
+  }
+  res.json({ posts: posts.map((post) => post.toObject({ getters: true })) });
 };
 
-const createPost = (req, res, next) => {
-  // try {
-  DUMMY_POSTS.push({
-    name: req.body.name,
-    key: req.body.key,
-    image: req.body.imageLocation,
+const createPost = async (req, res, next) => {
+  const { userId, location, description, hashtags, imageLocation } = req.body;
+
+  const createdPost = new Post({
+    author: userId,
+    location,
+    description,
+    hashtags,
+    image: imageLocation,
+    likes: 0,
+    comments: [],
   });
 
-  console.log("PUSHED");
+  let user;
+  try {
+    user = await User.findById(userId);
+  } catch (err) {
+    deleteImage.deleteImage(req);
+    const error = new HttpError("Creating post failed, please try again.", 500);
+    return next(error);
+  }
 
-  // } catch (error) {
-  deleteImage(req);
+  if (!user) {
+    deleteImage.deleteImage(req);
+    const error = new HttpError("Could not find user for provided id.", 404);
+    return next(error);
+  }
+
+  try {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await createdPost.save({ session: sess });
+    user.posts.push(createdPost);
+    await user.save({ session: sess });
+    await sess.commitTransaction();
+    await createdPost.save();
+  } catch (err) {
+    deleteImage.deleteImage(req);
+    const error = new HttpError("Creating post failed, please try again.", 500);
+    return next(error);
+  }
+
+  res.status(201).json({ post: createdPost });
+};
+
+const createComment = async (req, res, next) => {
+  const { userId, userName, message } = req.body;
+  const postId = req.params.pid;
+
+  const createdComment = new Comment({
+    author: {
+      id: userId,
+      userName,
+    },
+    message,
+  });
+
+  let post;
+  try {
+    post = await Post.findById(postId);
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not add your comment.",
+      500
+    );
+    return next(error);
+  }
+
+  if (!post) {
+    const error = new HttpError("Could not find a post for provided id.", 404);
+    return next(error);
+  }
+
+  try {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await createdComment.save({ session: sess });
+    post.comments.push(createdComment);
+    await post.save({ session: sess });
+    await sess.commitTransaction();
+    await createdComment.save();
+  } catch (err) {
+    const error = new HttpError(
+      "Creating comment failed, please try again.",
+      500
+    );
+    return next(error);
+  }
+
+  res.status(201).json({ post });
+};
+
+const updateLikes = async (req, res, next) => {
+  const { likeAction } = req.body;
+  const postId = req.params.pid;
+
+  let post;
+  try {
+    post = await Post.findById(postId);
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not handle your action.",
+      500
+    );
+    return next(error);
+  }
+
+  if (!post) {
+    const error = new HttpError("Could not find a post for provided id.", 404);
+    return next(error);
+  }
+
+  if (likeAction === "add") {
+    post.likes += 1;
+  }
+  if (likeAction === "sub") {
+    if (post.likes === 0) {
+      const error = new HttpError("Could sub a like, already at 0.", 404);
+      return next(error);
+    }
+    post.likes -= 1;
+  }
+
+  try {
+    await post.save();
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not update likes.",
+      500
+    );
+    return next(error);
+  }
+  res.status(200).json({ likes: post.likes });
+};
+
+const deletePost = async (req, res, next) => {
+  const postId = req.params.pid;
+
+  let post;
+  try {
+    post = await await Post.findById(postId)
+      .populate("author")
+      .populate("comments");
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not delete post.",
+      500
+    );
+    return next(error);
+  }
+
+  if (!post) {
+    const error = new HttpError("Could not find a post for this id.", 404);
+    return next(error);
+  }
+
+  // if (place.creator.id !== req.userData.userId) {
+  //   const error = new HttpError(
+  //     "You're are not allowed to delete this place..",
+  //     401
+  //   );
+  //   return next(error);
   // }
 
-  res.json(DUMMY_POSTS);
-  next();
-};
+  let key = post.image.split("/");
+  key = key[key.length - 1];
 
-const deleteImage = (req) => {
-  const s3 = new AWS.S3({
-    accessKeyId: process.env.AWS_ID,
-    secretAccessKey: process.env.AWS_SECRET,
-  });
+  try {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await post.remove({ session: sess });
+    post.author.posts.pull(post);
+    await post.comments.map((comment) => comment.remove({ session: sess }));
+    await post.author.save({ session: sess });
+    await sess.commitTransaction();
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not update place.",
+      500
+    );
+    return next(error);
+  }
 
-  var params = {
-    Bucket: process.env.AWS_BUCKET_NAME,
-    Key: "0aa146bb-e538-489a-bd05-cc5133fd4f9c.jpg",
-  };
-  s3.deleteObject(params, function (err, data) {
-    if (data) {
-      console.log("File deleted successfully");
-    } else {
-      console.log("Check if you have sufficient permissions : " + err);
-    }
-  });
+  deleteImage.deleteImage(key);
+
+  res.status(200).json({ message: "Deleted post." });
 };
 
 exports.getPosts = getPosts;
 exports.createPost = createPost;
+exports.createComment = createComment;
+exports.updateLikes = updateLikes;
+exports.deletePost = deletePost;

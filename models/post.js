@@ -4,14 +4,12 @@ const Schema = mongoose.Schema;
 
 const postSchema = new Schema({
   author: { type: mongoose.Types.ObjectId, required: true, ref: "User" },
-  title: { type: String, required: true },
+  location: { type: String, required: true },
+  date: { type: Date, default: new Date() },
   description: { type: String, required: true },
+  hashtags: { type: String },
+  likes: { type: Number, default: 0 },
   image: { type: String, required: true },
-  address: { type: String, required: true },
-  location: {
-    lat: { type: Number, required: true },
-    lng: { type: Number, required: true },
-  },
   comments: [{ type: mongoose.Types.ObjectId, required: true, ref: "Comment" }],
 });
 
