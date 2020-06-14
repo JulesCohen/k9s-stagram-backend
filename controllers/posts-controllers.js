@@ -12,7 +12,6 @@ const getPosts = async (req, res, next) => {
     posts = await Post.find()
       .populate("comments")
       .populate("author", "-password -email -posts");
-    // posts.comments.map((post) => post.comments.populate("author"));
   } catch (err) {
     const error = new HttpError(
       "Fetching posts failed, please try again later.",
@@ -21,6 +20,28 @@ const getPosts = async (req, res, next) => {
     return next(error);
   }
   res.json({ posts: posts.map((post) => post.toObject({ getters: true })) });
+};
+
+const getPostsByUserId = async (req, res, next) => {
+  const userId = req.params.uid;
+
+  let posts;
+  try {
+    posts = await Post.find({ author: userId })
+      .populate("comments")
+      .populate(
+        "author",
+        "-password -email -posts -followers -followings -image"
+      );
+  } catch (err) {
+    const error = new HttpError(
+      "Fetching posts failed, please try again later.",
+      500
+    );
+    return next(error);
+  }
+
+  res.json({ posts });
 };
 
 const createPost = async (req, res, next) => {
@@ -40,13 +61,13 @@ const createPost = async (req, res, next) => {
   try {
     user = await User.findById(userId);
   } catch (err) {
-    deleteImage.deleteImage(req);
+    deleteImage.deleteImage(req.body.key);
     const error = new HttpError("Creating post failed, please try again.", 500);
     return next(error);
   }
 
   if (!user) {
-    deleteImage.deleteImage(req);
+    deleteImage.deleteImage(req.body.key);
     const error = new HttpError("Could not find user for provided id.", 404);
     return next(error);
   }
@@ -60,7 +81,7 @@ const createPost = async (req, res, next) => {
     await sess.commitTransaction();
     await createdPost.save();
   } catch (err) {
-    deleteImage.deleteImage(req);
+    deleteImage.deleteImage(req.body.key);
     const error = new HttpError("Creating post failed, please try again.", 500);
     return next(error);
   }
@@ -112,7 +133,9 @@ const createComment = async (req, res, next) => {
     return next(error);
   }
 
-  res.status(201).json({ post });
+  res.status(201).json({
+    comments: posts.comments,
+  });
 };
 
 const updateLikes = async (req, res, next) => {
@@ -212,6 +235,7 @@ const deletePost = async (req, res, next) => {
 };
 
 exports.getPosts = getPosts;
+exports.getPostsByUserId = getPostsByUserId;
 exports.createPost = createPost;
 exports.createComment = createComment;
 exports.updateLikes = updateLikes;

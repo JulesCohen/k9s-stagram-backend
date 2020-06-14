@@ -6,6 +6,7 @@ const imagesControllers = require("../controllers/images-controllers");
 const router = express.Router();
 
 router.get("/", postsControllers.getPosts);
+router.get("/users/:uid", postsControllers.getPostsByUserId);
 
 router.post("/:pid/comments", postsControllers.createComment);
 router.patch("/:pid/likes", postsControllers.updateLikes);

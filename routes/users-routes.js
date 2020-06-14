@@ -5,7 +5,7 @@ const usersControllers = require("../controllers/users-controllers");
 const imagesControllers = require("../controllers/images-controllers");
 const router = express.Router();
 
-// router.get("/", postsControllers.getPosts);
+router.get("/:uid", usersControllers.getUserById);
 
 router.post(
   "/signup",
@@ -20,5 +20,10 @@ router.post(
   ],
   usersControllers.signup
 );
+
+router.post("/login", usersControllers.login);
+
+router.patch("/:uid/follow", usersControllers.followUser);
+router.patch("/:uid/unfollow", usersControllers.unFollowUser);
 
 module.exports = router;
