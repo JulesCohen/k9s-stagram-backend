@@ -5,7 +5,7 @@ const postsControllers = require("../controllers/posts-controllers");
 const imagesControllers = require("../controllers/images-controllers");
 const router = express.Router();
 
-router.get("/", postsControllers.getPosts);
+router.get("/:uid", postsControllers.getPosts);
 router.get("/users/:uid", postsControllers.getPostsByUserId);
 
 router.post("/:pid/comments", postsControllers.createComment);

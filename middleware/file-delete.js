@@ -10,13 +10,19 @@ const deleteImage = async (key) => {
     Bucket: process.env.AWS_BUCKET_NAME,
     Key: key,
   };
-  s3.deleteObject(params, function (err, data) {
-    if (data) {
-      console.log("File deleted successfully");
-    } else {
-      console.log("Check if you have sufficient permissions : " + err);
-    }
-  });
+
+  console.log(key);
+
+  await s3
+    .deleteObject(params, function (err, data) {
+      if (err) {
+        const error = new HttpError("Could not delete image", 500);
+        return next(error);
+      } else {
+        console.log("Image Deleted", data);
+      }
+    })
+    .promise();
 };
 
 exports.deleteImage = deleteImage;

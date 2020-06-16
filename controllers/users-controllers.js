@@ -37,10 +37,11 @@ const getUserById = async (req, res, next) => {
 const signup = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return next(
-      deleteImage(req),
+    const err = next(
       new HttpError("Invalid inputs passed, please check your data.", 422)
     );
+
+    return next(err);
   }
 
   const {
@@ -56,7 +57,6 @@ const signup = async (req, res, next) => {
   try {
     existingUser = await User.findOne({ email: email });
   } catch (err) {
-    // deleteImage(req);
     const error = new HttpError(
       "Signing up failed, please try again later.",
       500
@@ -65,7 +65,7 @@ const signup = async (req, res, next) => {
   }
 
   if (existingUser) {
-    deleteImage.deleteImage(req);
+    console.log("DEJA");
     const error = new HttpError(
       "User exists already, please login instead.",
       422
@@ -77,7 +77,6 @@ const signup = async (req, res, next) => {
   try {
     hashedPassword = await bcrypt.hash(password, 12);
   } catch (err) {
-    deleteImage(req);
     const error = new HttpError(
       "Could not create user, please try again.",
       500
@@ -217,6 +216,7 @@ const followUser = async (req, res, next) => {
 
   res.status(201).json({ message: "User followed" });
 };
+
 const unFollowUser = async (req, res, next) => {
   const userId = req.params.uid;
 

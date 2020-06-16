@@ -7,11 +7,28 @@ const User = require("../models/user");
 const Comment = require("../models/comment");
 
 const getPosts = async (req, res, next) => {
+  const userId = req.params.uid;
+
+  let user;
+  try {
+    user = await User.findById(userId);
+  } catch (err) {
+    const error = new HttpError(
+      "Fetching posts failed, please try again later.",
+      500
+    );
+    return next(error);
+  }
+
+  console.log(user.followings);
+
   let posts;
   try {
     posts = await Post.find()
-      .populate("comments")
-      .populate("author", "-password -email -posts");
+      .where("author")
+      .in(user.followings)
+      .populate("author", "userName")
+      .populate("comments");
   } catch (err) {
     const error = new HttpError(
       "Fetching posts failed, please try again later.",
@@ -134,7 +151,7 @@ const createComment = async (req, res, next) => {
   }
 
   res.status(201).json({
-    comments: posts.comments,
+    comments: post.comments,
   });
 };
 

@@ -7,7 +7,7 @@ const s3 = new AWS.S3({
 });
 
 const uploadImage = (req, res, next) => {
-  console.log(req.file);
+  console.log(req.body);
   let myFile = req.file.originalname.split(".");
   const fileType = myFile[myFile.length - 1];
 
@@ -20,13 +20,13 @@ const uploadImage = (req, res, next) => {
 
   s3.upload(params, (error, data) => {
     if (error) {
-      res.status(500).send(error);
+      const err = new HttpError(error, 500);
+      return next(err);
     }
 
     req.body.imageLocation = data.Location;
-    req.body.key = data.key;
+    req.body.imgKey = params.Key;
     console.log(req.body);
-    // res.status(200).send(data);
     next();
   });
 };
