@@ -14,7 +14,7 @@ const getUserById = async (req, res, next) => {
   let user;
 
   try {
-    user = await User.findById(userId, "-password -posts -email");
+    user = await User.findById(userId, "-password -email");
   } catch (err) {
     const error = new HttpError(
       "Something went wrong, could not find a user.",
@@ -99,7 +99,6 @@ const signup = async (req, res, next) => {
   try {
     await createdUser.save();
   } catch (err) {
-    deleteImage(req);
     const error = new HttpError(
       "Signing up failed, please try again later.",
       500
@@ -107,10 +106,29 @@ const signup = async (req, res, next) => {
     return next(error);
   }
 
-  res.status(201).json(createdUser);
+  let token;
+  try {
+    token = jwt.sign(
+      { userId: createdUser.id, email: createdUser.email },
+      process.env.JWT_KEY,
+      { expiresIn: "1h" }
+    );
+  } catch (err) {
+    const error = new HttpError(
+      "Signing up failed [token failed], please try again later.",
+      500
+    );
+    return next(error);
+  }
+
+  res
+    .status(201)
+    .json({ userId: createdUser.id, email: createdUser.email, token: token });
 };
 
 const login = async (req, res, next) => {
+  console.log(req);
+
   const { email, password } = req.body;
 
   let existingUser;
@@ -152,25 +170,25 @@ const login = async (req, res, next) => {
     return next(error);
   }
 
-  // let token;
-  // try {
-  //   token = jwt.sign(
-  //     { userId: existingUser.id, email: existingUser.email },
-  //     process.env.JWT_KEY,
-  //     { expiresIn: "1h" }
-  //   );
-  // } catch (err) {
-  //   const error = new HttpError(
-  //     "Logging in failed, please try again later.",
-  //     500
-  //   );
-  //   return next(error);
-  // }
-
+  let token;
+  try {
+    token = jwt.sign(
+      { userId: existingUser.id, email: existingUser.email },
+      process.env.JWT_KEY,
+      { expiresIn: "1h" }
+    );
+  } catch (err) {
+    const error = new HttpError(
+      "Logging in failed, please try again later.",
+      500
+    );
+    return next(error);
+  }
+  console.log("LOGIN OK");
   res.json({
     userId: existingUser.id,
     email: existingUser.email,
-    // token: token
+    token: token,
   });
 };
 const followUser = async (req, res, next) => {

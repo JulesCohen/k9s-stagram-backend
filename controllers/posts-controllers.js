@@ -45,6 +45,7 @@ const getPostsByUserId = async (req, res, next) => {
   let posts;
   try {
     posts = await Post.find({ author: userId })
+      .sort("-date")
       .populate("comments")
       .populate(
         "author",
@@ -58,7 +59,7 @@ const getPostsByUserId = async (req, res, next) => {
     return next(error);
   }
 
-  res.json({ posts });
+  res.json({ posts: posts.map((post) => post.toObject({ getters: true })) });
 };
 
 const createPost = async (req, res, next) => {
