@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.get("/:uid", postsControllers.getPosts);
 router.get("/users/:uid", postsControllers.getPostsByUserId);
+router.get("/hashtag/:hashtag", postsControllers.getPostsByHashtag);
 
 router.post("/:pid/comments", postsControllers.createComment);
 router.patch("/:pid/likes", postsControllers.updateLikes);

@@ -7,8 +7,11 @@ const postSchema = new Schema({
   location: { type: String, required: true },
   date: { type: Date, default: new Date() },
   description: { type: String, required: true },
-  hashtags: { type: String },
-  likes: { type: Number, default: 0 },
+  // hashtags: { type: String },
+  likes: {
+    count: { type: Number, default: 0 },
+    users: [{ type: mongoose.Types.ObjectId, required: true, ref: "User" }],
+  },
   image: { type: String, required: true },
   comments: [{ type: mongoose.Types.ObjectId, required: true, ref: "Comment" }],
 });

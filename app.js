@@ -8,7 +8,7 @@ const usersRoutes = require("./routes/users-routes");
 const app = express();
 const HttpError = require("./models/http-error");
 const deleteImage = require("./middleware/file-delete");
-
+const User = require("./models/user");
 app.use(bodyParser.json());
 
 app.use((req, res, next) => {

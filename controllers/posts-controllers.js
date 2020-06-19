@@ -39,6 +39,26 @@ const getPosts = async (req, res, next) => {
   res.json({ posts: posts.map((post) => post.toObject({ getters: true })) });
 };
 
+const getPostsByHashtag = async (req, res, next) => {
+  let posts;
+  try {
+    // posts = await Post.find({ hastags: `#${req.params.hashtag}` })
+    posts = await Post.find({
+      description: { $regex: `#${req.params.hashtag}`, $options: "i" },
+    })
+      .sort("-date")
+      .populate("comments")
+      .populate("author", "-password -email -posts -followers -followings");
+  } catch (err) {
+    const error = new HttpError(
+      "Fetching posts failed, please try again later.",
+      500
+    );
+    return next(error);
+  }
+  res.json({ posts: posts.map((post) => post.toObject({ getters: true })) });
+};
+
 const getPostsByUserId = async (req, res, next) => {
   const userId = req.params.uid;
 
@@ -47,10 +67,7 @@ const getPostsByUserId = async (req, res, next) => {
     posts = await Post.find({ author: userId })
       .sort("-date")
       .populate("comments")
-      .populate(
-        "author",
-        "-password -email -posts -followers -followings -image"
-      );
+      .populate("author", "-password -email -posts -followers -followings");
   } catch (err) {
     const error = new HttpError(
       "Fetching posts failed, please try again later.",
@@ -71,7 +88,10 @@ const createPost = async (req, res, next) => {
     description,
     hashtags,
     image: imageLocation,
-    likes: 0,
+    likes: {
+      count: 0,
+      users: [],
+    },
     comments: [],
   });
 
@@ -253,6 +273,7 @@ const deletePost = async (req, res, next) => {
 };
 
 exports.getPosts = getPosts;
+exports.getPostsByHashtag = getPostsByHashtag;
 exports.getPostsByUserId = getPostsByUserId;
 exports.createPost = createPost;
 exports.createComment = createComment;
