@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 const postSchema = new Schema({
   author: { type: mongoose.Types.ObjectId, required: true, ref: "User" },
   location: { type: String, required: true },
-  date: { type: Date, default: new Date() },
+  date: { type: String },
   description: { type: String, required: true },
   // hashtags: { type: String },
   likes: {

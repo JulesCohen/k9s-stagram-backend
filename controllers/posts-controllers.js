@@ -5,7 +5,7 @@ const Post = require("../models/post");
 const mongoose = require("mongoose");
 const User = require("../models/user");
 const Comment = require("../models/comment");
-
+var moment = require("moment");
 const getPosts = async (req, res, next) => {
   const userId = req.params.uid;
 
@@ -46,7 +46,7 @@ const getPostsByHashtag = async (req, res, next) => {
     posts = await Post.find({
       description: { $regex: `#${req.params.hashtag}`, $options: "i" },
     })
-      .sort("-date")
+      // .sort("-date")
       .populate("comments")
       .populate("author", "-password -email -posts -followers -followings");
   } catch (err) {
@@ -65,7 +65,7 @@ const getPostsByUserId = async (req, res, next) => {
   let posts;
   try {
     posts = await Post.find({ author: userId })
-      .sort("-date")
+      // .sort("-date")
       .populate("comments")
       .populate("author", "-password -email -posts -followers -followings");
   } catch (err) {
@@ -87,6 +87,7 @@ const createPost = async (req, res, next) => {
     location,
     description,
     hashtags,
+    date: moment().format("MMMM Do YYYY, h:mm a"),
     image: imageLocation,
     likes: {
       count: 0,
@@ -128,13 +129,29 @@ const createPost = async (req, res, next) => {
 };
 
 const createComment = async (req, res, next) => {
-  const { userId, userName, message } = req.body;
+  const { userId, message } = req.body;
   const postId = req.params.pid;
+
+  let user;
+  try {
+    user = await User.findById(userId);
+  } catch (err) {
+    const error = new HttpError(
+      "Commenting post failed, please try again.",
+      500
+    );
+    return next(error);
+  }
+
+  if (!user) {
+    const error = new HttpError("Could not find user for provided id.", 404);
+    return next(error);
+  }
 
   const createdComment = new Comment({
     author: {
       id: userId,
-      userName,
+      userName: user.userName,
     },
     message,
   });
