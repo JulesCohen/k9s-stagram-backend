@@ -217,7 +217,7 @@ const createComment = async (req, res, next) => {
 };
 
 const updateLikes = async (req, res, next) => {
-  const { likeAction } = req.body;
+  const { likeAction, user } = req.body;
   const postId = req.params.pid;
 
   let post;
@@ -237,14 +237,16 @@ const updateLikes = async (req, res, next) => {
   }
 
   if (likeAction === "add") {
-    post.likes += 1;
+    post.likes.count += 1;
+    post.likes.users.push(user);
   }
   if (likeAction === "sub") {
     if (post.likes === 0) {
       const error = new HttpError("Could sub a like, already at 0.", 404);
       return next(error);
     }
-    post.likes -= 1;
+    post.likes.count -= 1;
+    post.likes.users = post.likes.users.filter((userid) => userid !== user);
   }
 
   try {
@@ -256,7 +258,7 @@ const updateLikes = async (req, res, next) => {
     );
     return next(error);
   }
-  res.status(200).json({ likes: post.likes });
+  res.status(200).json({ count: post.likes.count });
 };
 
 const deletePost = async (req, res, next) => {
@@ -312,6 +314,58 @@ const deletePost = async (req, res, next) => {
   res.status(200).json({ message: "Deleted post." });
 };
 
+const deleteComment = async (req, res, next) => {
+  const postId = req.params.pid;
+
+  let post;
+  try {
+    post = await await Post.findById(postId).populate("comments");
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not delete comment.",
+      500
+    );
+    return next(error);
+  }
+
+  if (!post) {
+    const error = new HttpError("Could not find a post for this id.", 404);
+    return next(error);
+  }
+  let comment;
+  try {
+    comment = await await Comment.findById(req.body.commentId);
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not delete comment.",
+      500
+    );
+    return next(error);
+  }
+
+  if (!comment) {
+    const error = new HttpError("Could not find a comment for this id.", 404);
+    return next(error);
+  }
+
+  try {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await comment.remove({ session: sess });
+    post.comments.pull(comment);
+    await post.save({ session: sess });
+    await sess.commitTransaction();
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not delete comment.",
+      500
+    );
+    return next(error);
+  }
+
+  res.status(200).json({ message: "Deleted comment." });
+};
+
 exports.getPosts = getPosts;
 exports.getFollowedPosts = getFollowedPosts;
 exports.getPostsByHashtag = getPostsByHashtag;
@@ -320,3 +374,4 @@ exports.createPost = createPost;
 exports.createComment = createComment;
 exports.updateLikes = updateLikes;
 exports.deletePost = deletePost;
+exports.deleteComment = deleteComment;

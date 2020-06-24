@@ -17,6 +17,7 @@ router.get("/users/:uid", postsControllers.getPostsByUserId);
 router.get("/hashtag/:hashtag", postsControllers.getPostsByHashtag);
 
 router.post("/:pid/comments", postsControllers.createComment);
+router.delete("/:pid/comments", postsControllers.deleteComment);
 router.patch("/:pid/likes", postsControllers.updateLikes);
 
 router.delete("/:pid", postsControllers.deletePost);
