@@ -6,7 +6,30 @@ const mongoose = require("mongoose");
 const User = require("../models/user");
 const Comment = require("../models/comment");
 var moment = require("moment");
+
 const getPosts = async (req, res, next) => {
+  let posts;
+  try {
+    posts = await Post.find()
+      .populate("author", "-password -email -posts -followers")
+      .populate({
+        path: "comments",
+        populate: {
+          path: "author",
+          select: "userName id",
+        },
+      });
+  } catch (err) {
+    const error = new HttpError(
+      "Fetching posts failed, please try again later.",
+      500
+    );
+    return next(error);
+  }
+  res.json({ posts: posts.map((post) => post.toObject({ getters: true })) });
+};
+
+const getFollowedPosts = async (req, res, next) => {
   const userId = req.params.uid;
 
   let user;
@@ -125,13 +148,12 @@ const createPost = async (req, res, next) => {
     return next(error);
   }
 
-  res.status(201).json({ post: createdPost });
+  res.status(201).json({ post: createdPost.toObject({ getters: true }) });
 };
 
 const createComment = async (req, res, next) => {
-  const { userId, message } = req.body;
+  const { userId, comment } = req.body;
   const postId = req.params.pid;
-
   let user;
   try {
     user = await User.findById(userId);
@@ -144,7 +166,7 @@ const createComment = async (req, res, next) => {
   }
 
   if (!user) {
-    const error = new HttpError("Could not find user for provided id.", 404);
+    const error = new HttpError("Could not find user for provided id..", 404);
     return next(error);
   }
 
@@ -153,7 +175,7 @@ const createComment = async (req, res, next) => {
       id: userId,
       userName: user.userName,
     },
-    message,
+    comment,
   });
 
   let post;
@@ -181,6 +203,7 @@ const createComment = async (req, res, next) => {
     await sess.commitTransaction();
     await createdComment.save();
   } catch (err) {
+    console.log(err);
     const error = new HttpError(
       "Creating comment failed, please try again.",
       500
@@ -189,7 +212,7 @@ const createComment = async (req, res, next) => {
   }
 
   res.status(201).json({
-    comments: post.comments,
+    comment: createdComment.toObject({ getters: true }),
   });
 };
 
@@ -290,6 +313,7 @@ const deletePost = async (req, res, next) => {
 };
 
 exports.getPosts = getPosts;
+exports.getFollowedPosts = getFollowedPosts;
 exports.getPostsByHashtag = getPostsByHashtag;
 exports.getPostsByUserId = getPostsByUserId;
 exports.createPost = createPost;
