@@ -9,6 +9,7 @@ const app = express();
 const HttpError = require("./models/http-error");
 const deleteImage = require("./middleware/file-delete");
 const User = require("./models/user");
+
 app.use(bodyParser.json());
 
 app.use((req, res, next) => {
@@ -22,6 +23,7 @@ app.use((req, res, next) => {
 });
 
 app.use("/api/posts", postsRoutes);
+
 app.use("/api/users", usersRoutes);
 
 app.use((req, res, next) => {

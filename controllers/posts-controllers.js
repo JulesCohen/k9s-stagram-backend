@@ -5,6 +5,8 @@ const Post = require("../models/post");
 const mongoose = require("mongoose");
 const User = require("../models/user");
 const Comment = require("../models/comment");
+const notification = require("../util/notifications");
+
 var moment = require("moment");
 
 const getPosts = async (req, res, next) => {
@@ -180,7 +182,7 @@ const createComment = async (req, res, next) => {
 
   let post;
   try {
-    post = await Post.findById(postId);
+    post = await Post.findById(postId).populate("author");
   } catch (err) {
     const error = new HttpError(
       "Something went wrong, could not add your comment.",
@@ -211,18 +213,20 @@ const createComment = async (req, res, next) => {
     return next(error);
   }
 
+  console.log(post.author);
+  notification.push("comment", user.userName, post.author, post.image);
   res.status(201).json({
     comment: createdComment.toObject({ getters: true }),
   });
 };
 
 const updateLikes = async (req, res, next) => {
-  const { likeAction, user } = req.body;
+  const { likeAction, userId } = req.body;
   const postId = req.params.pid;
 
   let post;
   try {
-    post = await Post.findById(postId);
+    post = await Post.findById(postId).populate("author");
   } catch (err) {
     const error = new HttpError(
       "Something went wrong, could not handle your action.",
@@ -236,9 +240,25 @@ const updateLikes = async (req, res, next) => {
     return next(error);
   }
 
+  let user;
+  try {
+    user = await User.findById(userId, "userName");
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not handle your action.",
+      500
+    );
+    return next(error);
+  }
+
+  if (!user) {
+    const error = new HttpError("Could not find a user for provided id.", 404);
+    return next(error);
+  }
+
   if (likeAction === "add") {
     post.likes.count += 1;
-    post.likes.users.push(user);
+    post.likes.users.push(user.id);
   }
   if (likeAction === "sub") {
     if (post.likes === 0) {
@@ -246,11 +266,14 @@ const updateLikes = async (req, res, next) => {
       return next(error);
     }
     post.likes.count -= 1;
-    post.likes.users = post.likes.users.filter((userid) => userid !== user);
+    post.likes.users = post.likes.users.filter((userid) => userid !== user.id);
   }
 
   try {
     await post.save();
+    if (likeAction === "add") {
+      notification.push("like", user.userName, post.author, post.image);
+    }
   } catch (err) {
     const error = new HttpError(
       "Something went wrong, could not update likes.",
@@ -258,6 +281,7 @@ const updateLikes = async (req, res, next) => {
     );
     return next(error);
   }
+  // console.log("TEST");
   res.status(200).json({ count: post.likes.count });
 };
 
