@@ -45,8 +45,6 @@ const getFollowedPosts = async (req, res, next) => {
     return next(error);
   }
 
-  console.log(user.followings);
-
   let posts;
   try {
     posts = await Post.find()
@@ -205,7 +203,6 @@ const createComment = async (req, res, next) => {
     await sess.commitTransaction();
     await createdComment.save();
   } catch (err) {
-    console.log(err);
     const error = new HttpError(
       "Creating comment failed, please try again.",
       500
@@ -281,7 +278,6 @@ const updateLikes = async (req, res, next) => {
     );
     return next(error);
   }
-  // console.log("TEST");
   res.status(200).json({ count: post.likes.count });
 };
 

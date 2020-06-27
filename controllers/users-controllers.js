@@ -70,7 +70,6 @@ const signup = async (req, res, next) => {
   }
 
   if (existingUser) {
-    console.log("DEJA");
     const error = new HttpError(
       "User exists already, please login instead.",
       422
@@ -132,8 +131,6 @@ const signup = async (req, res, next) => {
 };
 
 const login = async (req, res, next) => {
-  console.log(req);
-
   const { email, password } = req.body;
 
   let existingUser;
