@@ -12,6 +12,9 @@ const userSchema = new Schema({
   posts: [{ type: mongoose.Types.ObjectId, required: true, ref: "Post" }],
   followers: [{ type: mongoose.Types.ObjectId, required: true, ref: "User" }],
   followings: [{ type: mongoose.Types.ObjectId, required: true, ref: "User" }],
+  notifications: [
+    { type: mongoose.Types.ObjectId, required: true, ref: "Notification" },
+  ],
 });
 
 userSchema.plugin(uniqueValidator);

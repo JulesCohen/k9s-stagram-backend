@@ -1,6 +1,6 @@
 var Pusher = require("pusher");
 
-const push = (type, liker, postAuthor, image) => {
+const push = (message, notifCreator, postAuthor, image) => {
   var pusher = new Pusher({
     appId: "1019702",
     key: "c65d3bc16b3b7905efb1",
@@ -8,23 +8,8 @@ const push = (type, liker, postAuthor, image) => {
     cluster: "us2",
   });
 
-  var message;
-  switch (type) {
-    case "like":
-      message = `${liker} liked your photo!`;
-      break;
-    case "comment":
-      message = `${liker} has commented your photo!`;
-      break;
-    case "follow":
-      message = `${liker} followed you!`;
-      break;
-
-    default:
-      break;
-  }
-
   pusher.trigger(`user${postAuthor.id}`, "notification", {
+    notifCreator: { id: notifCreator, userName: notifCreator },
     message: message,
     image: image,
   });
