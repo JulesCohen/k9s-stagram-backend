@@ -234,7 +234,15 @@ const followUser = async (req, res, next) => {
     return next(error);
   }
 
-  res.status(201).json({ message: "User followed" });
+  req.body.data = { message: "User followed" };
+  req.body.type = "follow";
+  req.body.notifCreator = user;
+  req.body.postAuthor = followedUser;
+  req.body.image = user.image;
+
+  next();
+
+  // res.status(201).json({ message: "User followed" });
 };
 
 const unFollowUser = async (req, res, next) => {

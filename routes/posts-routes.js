@@ -25,7 +25,11 @@ router.post(
   notificationsControllers.createNotification
 );
 router.delete("/:pid/comments", commentsControllers.deleteComment);
-router.patch("/:pid/likes", likesControllers.updateLikes);
+router.patch(
+  "/:pid/likes",
+  likesControllers.updateLikes,
+  notificationsControllers.createNotification
+);
 
 router.delete("/:pid", postsControllers.deletePost);
 

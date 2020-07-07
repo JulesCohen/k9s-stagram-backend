@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const postsRoutes = require("./routes/posts-routes");
 const usersRoutes = require("./routes/users-routes");
+const searchRoutes = require("./routes/search-routes");
 const app = express();
 const HttpError = require("./models/http-error");
 const deleteImage = require("./middleware/file-delete");
@@ -21,6 +22,8 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE");
   next();
 });
+
+app.use("/api/search", searchRoutes);
 
 app.use("/api/posts", postsRoutes);
 

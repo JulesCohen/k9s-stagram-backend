@@ -6,6 +6,41 @@ const Comment = require("../models/comment");
 const Notification = require("../models/notification");
 const pusher = require("../util/notifications");
 
+const getNotifications = async (req, res, next) => {
+  const userId = req.params.uid;
+  console.log("BACK NOTIF");
+  let user;
+
+  try {
+    user = await User.findById(userId, "notifications").populate({
+      path: "notifications",
+      populate: {
+        path: "postAuthor",
+      },
+      populate: {
+        path: "notifCreator",
+        select: "userName id",
+      },
+    });
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not find a user.",
+      500
+    );
+    return next(error);
+  }
+
+  if (!user) {
+    const error = new HttpError(
+      "Could not find a user for the provided id.",
+      404
+    );
+    return next(error);
+  }
+
+  res.json({ user: user.notifications.toObject({ getters: true }) });
+};
+
 const createNotification = async (req, res, next) => {
   const { type, notifCreator, postAuthor, image, data } = req.body;
 
@@ -54,9 +89,16 @@ const createNotification = async (req, res, next) => {
     return next(error);
   }
 
-  res.status(201).json({
-    comment: data.toObject({ getters: true }),
-  });
+  if (type === "follow") {
+    res.status(201).json({
+      data: data,
+    });
+  } else {
+    res.status(201).json({
+      data: data.toObject({ getters: true }),
+    });
+  }
 };
 
+exports.getNotifications = getNotifications;
 exports.createNotification = createNotification;

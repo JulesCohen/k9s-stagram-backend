@@ -55,7 +55,14 @@ const updateLikes = async (req, res, next) => {
   try {
     await post.save();
     if (likeAction === "add") {
-      notification.push("like", user.userName, post.author, post.image);
+      req.body.data = post.likes.count;
+      req.body.type = "like";
+      req.body.notifCreator = user;
+      req.body.postAuthor = post.author;
+      req.body.image = post.image;
+
+      next();
+      // notification.push("like", user.userName, post.author, post.image);
     }
   } catch (err) {
     const error = new HttpError(
