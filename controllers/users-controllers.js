@@ -241,8 +241,6 @@ const followUser = async (req, res, next) => {
   req.body.image = user.image;
 
   next();
-
-  // res.status(201).json({ message: "User followed" });
 };
 
 const unFollowUser = async (req, res, next) => {

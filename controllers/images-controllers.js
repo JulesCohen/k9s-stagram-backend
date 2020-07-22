@@ -9,14 +9,6 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.AWS_SECRET,
 });
 
-// const convertToJpg = async (req) => {
-//   if (isJpg(req.file.buffer)) {
-//     return req.file.buffer;
-//   }
-
-//   return sharp(req.file.buffer).jpeg().toBuffer();
-// };
-
 const uploadImage = async (req, res, next) => {
   let img;
   try {
