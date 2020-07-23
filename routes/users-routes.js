@@ -9,6 +9,10 @@ const router = express.Router();
 router.get("/:uid", usersControllers.getUserById);
 
 router.get("/:uid/notifications", notificationsControllers.getNotifications);
+router.delete(
+  "/:uid/notifications/",
+  notificationsControllers.deleteNotification
+);
 
 router.post(
   "/signup",

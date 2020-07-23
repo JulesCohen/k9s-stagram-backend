@@ -85,9 +85,14 @@ const getPostsByUserId = async (req, res, next) => {
   let posts;
   try {
     posts = await Post.find({ author: userId })
-      // .sort("-date")
-      .populate("comments")
-      .populate("author", "-password -email -posts -followers -followings");
+      .populate("author", "-password -email -posts -followers")
+      .populate({
+        path: "comments",
+        populate: {
+          path: "author",
+          select: "userName id",
+        },
+      });
   } catch (err) {
     const error = new HttpError(
       "Fetching posts failed, please try again later.",

@@ -9,7 +9,7 @@ const search = async (req, res, next) => {
   const query = req.params.query;
   let users;
   try {
-    var regexp = new RegExp("^" + query);
+    var regexp = new RegExp(`^${query}`, "i");
     users = await User.find({ userName: regexp }, "userName image");
   } catch (err) {
     const error = new HttpError(

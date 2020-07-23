@@ -100,5 +100,64 @@ const createNotification = async (req, res, next) => {
   }
 };
 
+const deleteNotification = async (req, res, next) => {
+  const notifId = req.body.notifId;
+
+  let notif;
+  try {
+    notif = await await Notification.findById(notifId);
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not delete notification.",
+      500
+    );
+    return next(error);
+  }
+
+  if (!notif) {
+    const error = new HttpError(
+      "Could not find a notification for this id.",
+      404
+    );
+    return next(error);
+  }
+  let user;
+  console.log(req.params.uid);
+  try {
+    user = await await User.findById(req.params.uid);
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not delete notifications.",
+      500
+    );
+    return next(error);
+  }
+
+  console.log(user);
+
+  if (!user) {
+    const error = new HttpError("Could not find a user for this id.", 404);
+    return next(error);
+  }
+
+  try {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await notif.remove({ session: sess });
+    user.notifications.pull(notif);
+    await user.save({ session: sess });
+    await sess.commitTransaction();
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not delete notifications.",
+      500
+    );
+    return next(error);
+  }
+
+  res.status(200).json({ message: "Notifications deleted." });
+};
+
 exports.getNotifications = getNotifications;
 exports.createNotification = createNotification;
+exports.deleteNotification = deleteNotification;

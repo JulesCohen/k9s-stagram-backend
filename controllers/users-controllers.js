@@ -14,12 +14,24 @@ const getUserById = async (req, res, next) => {
   let user;
 
   try {
-    user = await User.findById(userId, "-password -email").populate({
-      path: "posts",
-      populate: {
-        path: "comments",
-      },
-    });
+    user = await User.findById(userId, "-password -email")
+      .populate({
+        path: "posts",
+        populate: {
+          path: "comments",
+          populate: {
+            path: "author",
+            select: "userName id",
+          },
+        },
+      })
+      .populate({
+        path: "posts",
+        populate: {
+          path: "author",
+          select: "userName id image",
+        },
+      });
   } catch (err) {
     const error = new HttpError(
       "Something went wrong, could not find a user.",
