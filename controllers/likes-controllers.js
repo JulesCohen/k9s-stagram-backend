@@ -54,7 +54,7 @@ const updateLikes = async (req, res, next) => {
 
   try {
     await post.save();
-    if (likeAction === "add") {
+    if (likeAction === "add" && user.id !== post.author.id) {
       req.body.data = post.likes.count;
       req.body.type = "like";
       req.body.notifCreator = user;

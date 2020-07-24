@@ -111,7 +111,6 @@ const createPost = async (req, res, next) => {
     author: userId,
     location,
     description,
-    hashtags,
     date: moment().format("MMMM Do YYYY, h:mm a"),
     image: imageLocation,
     likes: {
