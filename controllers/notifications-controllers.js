@@ -41,8 +41,6 @@ const getNotifications = async (req, res, next) => {
 const createNotification = async (req, res, next) => {
   const { type, notifCreator, postAuthor, image, data } = req.body;
 
-  //   pusher.push(type, notifCreator.userName, postAuthor, image);
-
   var message;
   switch (type) {
     case "like":
@@ -80,7 +78,6 @@ const createNotification = async (req, res, next) => {
       pusher.push(message, notifCreator.userName, postAuthor, image);
     }
   } catch (err) {
-    console.log(err);
     const error = new HttpError(
       "Creating notification failed, please try again.",
       500
@@ -121,7 +118,6 @@ const deleteNotification = async (req, res, next) => {
     return next(error);
   }
   let user;
-  console.log(req.params.uid);
   try {
     user = await await User.findById(req.params.uid);
   } catch (err) {
@@ -131,8 +127,6 @@ const deleteNotification = async (req, res, next) => {
     );
     return next(error);
   }
-
-  console.log(user);
 
   if (!user) {
     const error = new HttpError("Could not find a user for this id.", 404);

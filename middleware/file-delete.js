@@ -11,8 +11,6 @@ const deleteImage = async (key) => {
     Key: key,
   };
 
-  console.log(key);
-
   await s3.deleteObject(params, function (err, data) {
     if (err) {
       const error = new HttpError("Could not delete image", 500);

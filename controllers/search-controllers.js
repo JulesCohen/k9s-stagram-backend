@@ -36,7 +36,6 @@ const searchHashtags = async (req, res, next) => {
   }
 
   let hashtags = [];
-  console.log(posts);
 
   if (posts) {
     for (post in posts) {

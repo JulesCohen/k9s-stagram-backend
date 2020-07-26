@@ -24,7 +24,6 @@ const uploadImage = async (req, res, next) => {
       .rotate()
       .toBuffer();
   } catch (error) {
-    console.log(error);
     const err = new HttpError(error, 500);
     return next(err);
   }

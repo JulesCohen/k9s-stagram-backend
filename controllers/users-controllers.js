@@ -198,7 +198,6 @@ const login = async (req, res, next) => {
     );
     return next(error);
   }
-  console.log("LOGIN OK");
   res.json({
     userId: existingUser.id,
     email: existingUser.email,
@@ -242,7 +241,6 @@ const followUser = async (req, res, next) => {
     await sess.commitTransaction();
   } catch (err) {
     const error = new HttpError("Follow failed, please try again.", 500);
-    console.log(err);
     return next(error);
   }
 
@@ -298,7 +296,6 @@ const unFollowUser = async (req, res, next) => {
     await sess.commitTransaction();
   } catch (err) {
     const error = new HttpError("Unfollow failed, please try again.", 500);
-    console.log(err);
     return next(error);
   }
 
