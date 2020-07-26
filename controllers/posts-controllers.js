@@ -47,8 +47,14 @@ const getFollowedPosts = async (req, res, next) => {
     posts = await Post.find()
       .where("author")
       .in(user.followings)
-      .populate("author", "userName")
-      .populate("comments");
+      .populate("author", "-password -email -posts -followers")
+      .populate({
+        path: "comments",
+        populate: {
+          path: "author",
+          select: "userName id",
+        },
+      });
   } catch (err) {
     const error = new HttpError(
       "Fetching posts failed, please try again later.",
@@ -56,6 +62,7 @@ const getFollowedPosts = async (req, res, next) => {
     );
     return next(error);
   }
+
   res.json({ posts: posts.map((post) => post.toObject({ getters: true })) });
 };
 

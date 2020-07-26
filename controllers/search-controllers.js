@@ -40,8 +40,6 @@ const searchHashtags = async (req, res, next) => {
 
   if (posts) {
     for (post in posts) {
-      console.log(post);
-      // var regexp = new RegExp(`\#\\w+`, "i");
       var regexp = new RegExp(`\#[${query}]\\w+`, "i");
       let result = posts[post].description.match(regexp);
       hashtags.push(result[0]);

@@ -305,8 +305,67 @@ const unFollowUser = async (req, res, next) => {
   res.status(201).json({ message: "User unfollowed" });
 };
 
+const getFollowers = async (req, res, next) => {
+  const userId = req.params.uid;
+
+  let user;
+
+  try {
+    user = await User.findById(userId, "followers").populate(
+      "followers",
+      "userName id image"
+    );
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not find a user.",
+      500
+    );
+    return next(error);
+  }
+
+  if (!user) {
+    const error = new HttpError(
+      "Could not find a user for the provided id.",
+      404
+    );
+    return next(error);
+  }
+
+  res.json({ users: user.followers.toObject({ getters: true }) });
+};
+const getFollowings = async (req, res, next) => {
+  const userId = req.params.uid;
+
+  let user;
+
+  try {
+    user = await User.findById(userId, "followings").populate(
+      "followings",
+      "userName id image"
+    );
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not find a user.",
+      500
+    );
+    return next(error);
+  }
+
+  if (!user) {
+    const error = new HttpError(
+      "Could not find a user for the provided id.",
+      404
+    );
+    return next(error);
+  }
+
+  res.json({ users: user.followings.toObject({ getters: true }) });
+};
+
 exports.getUserById = getUserById;
 exports.signup = signup;
 exports.login = login;
 exports.followUser = followUser;
 exports.unFollowUser = unFollowUser;
+exports.getFollowers = getFollowers;
+exports.getFollowings = getFollowings;

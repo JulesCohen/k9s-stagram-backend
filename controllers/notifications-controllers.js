@@ -1,14 +1,11 @@
 const HttpError = require("../models/http-error");
-const Post = require("../models/post");
 const mongoose = require("mongoose");
 const User = require("../models/user");
-const Comment = require("../models/comment");
 const Notification = require("../models/notification");
 const pusher = require("../util/notifications");
 
 const getNotifications = async (req, res, next) => {
   const userId = req.params.uid;
-  console.log("BACK NOTIF");
   let user;
 
   try {

@@ -9,6 +9,8 @@ const router = express.Router();
 router.get("/:uid", usersControllers.getUserById);
 
 router.get("/:uid/notifications", notificationsControllers.getNotifications);
+router.get("/:uid/followers", usersControllers.getFollowers);
+router.get("/:uid/followings", usersControllers.getFollowings);
 router.delete(
   "/:uid/notifications/",
   notificationsControllers.deleteNotification
