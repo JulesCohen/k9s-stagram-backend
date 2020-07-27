@@ -118,7 +118,7 @@ const createPost = async (req, res, next) => {
     author: userId,
     location,
     description,
-    date: moment().format("MMMM Do YYYY, h:mm a"),
+    date: moment().format("MMMM Do YYYY"),
     image: imageLocation,
     likes: {
       count: 0,
