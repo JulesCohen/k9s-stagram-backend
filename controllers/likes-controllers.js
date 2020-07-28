@@ -25,7 +25,7 @@ const updateLikes = async (req, res, next) => {
 
   let user;
   try {
-    user = await User.findById(userId, "userName");
+    user = await User.findById(userId);
   } catch (err) {
     const error = new HttpError(
       "Something went wrong, could not handle your action.",

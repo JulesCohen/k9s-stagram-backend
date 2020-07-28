@@ -9,7 +9,7 @@ const push = (message, notifCreator, postAuthor, image) => {
   });
 
   pusher.trigger(`user${postAuthor.id}`, "notification", {
-    notifCreator: { id: notifCreator, userName: notifCreator },
+    notifCreator: { id: notifCreator.id, userName: notifCreator.userName },
     message: message,
     image: image,
   });

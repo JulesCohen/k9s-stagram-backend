@@ -74,8 +74,9 @@ const createNotification = async (req, res, next) => {
     await sess.commitTransaction();
     await notif.save();
 
+    console.log(notifCreator);
     if (notifCreator.id !== postAuthor.id) {
-      pusher.push(message, notifCreator.userName, postAuthor, image);
+      pusher.push(message, notifCreator, postAuthor, image);
     }
   } catch (err) {
     const error = new HttpError(
